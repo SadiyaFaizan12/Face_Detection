@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for Aadhar Card</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="/static/govt_logo.png" alt="Government Logo" class="govt-logo">
+            <h1>Apply for Aadhar Card</h1>
+            <img src="/static/aadhar_logo.png" alt="Aadhar Logo" class="aadhar-logo">
+        </div>
+    </header>
+    <div class="line"></div>
+    <div class="apply_div">
+        <div class="webcam-container">
+            <h2>Enter Your Details</h2>
+            <form id="aadharForm">
+                <div class="form-group">
+                    <label for="name"></label>
+                    <input type="text" id="name" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="address"></label>
+                    <input type="text" id="address" placeholder="Enter your address" required>
+                </div>
+                <div class="form-group">
+                    <label for="number"></label>
+                    <input type="text" id="number" placeholder="Enter your phone number" required>
+                </div>
+                <h2>Capture Your Photo</h2>
+                <video id="video" autoplay></video>
+                <button type="button" id="captureButton">Capture Photo</button>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <button type="submit">Submit Application</button>
+            </form>
+        </div>
+    </div>
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Tech Minds - Unique Identification Authority. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Access webcam
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing the webcam: ", err);
+            });
+
+        // Capture image and send to server
+        const captureButton = document.getElementById('captureButton');
+        const form = document.getElementById('aadharForm');
+
+        captureButton.addEventListener('click', function() {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        });
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting the default way
+
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            const number = document.getElementById('number').value;
+
+            const canvas = document.getElementById('canvas');
+            const dataURL = canvas.toDataURL('image/png');
+
+            fetch('/save-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    address: address,
+                    number: number,
+                    image: dataURL
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
